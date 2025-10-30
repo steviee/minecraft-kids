@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import type { RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import MainLayout from '../layouts/MainLayout.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -14,16 +15,23 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresGuest: true },
   },
   {
-    path: '/dashboard',
-    name: 'dashboard',
-    component: () => import('../views/DashboardView.vue'),
+    path: '/',
+    component: MainLayout,
     meta: { requiresAuth: true },
-  },
-  {
-    path: '/admin/users',
-    name: 'users',
-    component: () => import('../views/UserManagementView.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'dashboard',
+        component: () => import('../views/DashboardView.vue'),
+        meta: { title: 'Dashboard' },
+      },
+      {
+        path: 'admin/users',
+        name: 'users',
+        component: () => import('../views/UserManagementView.vue'),
+        meta: { requiresAdmin: true, title: 'Benutzerverwaltung' },
+      },
+    ],
   },
 ];
 
