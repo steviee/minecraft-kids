@@ -231,6 +231,114 @@ All endpoints return consistent error responses:
 }
 ```
 
+## RBAC Middleware
+
+The backend implements comprehensive Role-Based Access Control (RBAC) middleware for protecting API endpoints.
+
+### Available Middleware
+
+#### Authentication Middleware
+
+**`authenticateToken`** - Requires valid JWT token
+```typescript
+import { authenticateToken } from './middleware';
+
+app.get('/api/protected', authenticateToken, handler);
+```
+- Verifies JWT token from Authorization header
+- Attaches user data to `req.user`
+- Returns 401 if token is missing/invalid
+
+**`optionalAuth`** - Optional authentication
+```typescript
+app.get('/api/public', optionalAuth, handler);
+```
+- Attaches user data if valid token provided
+- Allows request to proceed without token
+
+#### Authorization Middleware
+
+**`requireRole(...roles)`** - Requires specific role(s)
+```typescript
+app.get('/api/admin', authenticateToken, requireRole('admin'), handler);
+app.get('/api/users', authenticateToken, requireRole('admin', 'junior-admin'), handler);
+```
+- Checks if user has one of the specified roles
+- Returns 403 if user lacks required role
+
+**`requireAdmin`** - Requires admin role
+```typescript
+app.post('/api/instances', authenticateToken, requireAdmin, handler);
+```
+- Shorthand for `requireRole('admin')`
+
+**`requireInstanceAccess(paramName?)`** - Checks instance permissions
+```typescript
+app.get('/api/instances/:instanceId', authenticateToken, requireInstanceAccess('instanceId'), handler);
+```
+- Admins: Access all instances
+- Junior-Admins: Access only assigned instances
+- Validates instance ID format
+- Returns 403 if junior-admin lacks permission
+
+**`requireUserManagementAccess`** - Requires user management permission
+```typescript
+app.get('/api/users', authenticateToken, requireUserManagementAccess, handler);
+```
+- Only admins can manage users
+
+**`requireSelfOrAdmin(paramName?)`** - Requires self or admin
+```typescript
+app.get('/api/users/:userId', authenticateToken, requireSelfOrAdmin('userId'), handler);
+```
+- Users can access their own data
+- Admins can access any user's data
+
+### Usage Examples
+
+```typescript
+import {
+  authenticateToken,
+  requireAdmin,
+  requireInstanceAccess
+} from './middleware';
+
+// Admin-only endpoint
+app.post('/api/instances', authenticateToken, requireAdmin, createInstance);
+
+// Instance-specific endpoint with RBAC
+app.get('/api/instances/:instanceId', authenticateToken, requireInstanceAccess(), getInstance);
+
+// Self or admin access
+app.get('/api/users/:userId/profile', authenticateToken, requireSelfOrAdmin(), getProfile);
+```
+
+### Error Responses
+
+**401 Unauthorized** - Missing or invalid token
+```json
+{
+  "error": "Unauthorized",
+  "message": "No authentication token provided"
+}
+```
+
+**403 Forbidden** - Insufficient permissions
+```json
+{
+  "error": "Forbidden",
+  "message": "You do not have access to this instance"
+}
+```
+
+**400 Bad Request** - Invalid parameter
+```json
+{
+  "error": "Bad Request",
+  "message": "Invalid instance ID"
+}
+```
+
 ## Security
 
 - **Password Hashing**: bcrypt with 12 salt rounds
@@ -238,5 +346,7 @@ All endpoints return consistent error responses:
 - **Token Expiration**: 24h for access, 7d for refresh
 - **Environment Variables**: Secrets stored in .env (not in repo)
 - **Validation**: Strict input validation for all auth endpoints
+- **RBAC**: Role-based access control with instance-level permissions
+- **Database Security**: Foreign keys enabled, prepared statements prevent SQL injection
 
 (More endpoints to be added as development progresses)
