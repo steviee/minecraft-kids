@@ -616,6 +616,26 @@ export class InstanceService {
 
     return permission !== undefined;
   }
+
+  /**
+   * Get instance RCON password (for internal use only)
+   */
+  getInstanceRconPassword(id: number): string | null {
+    try {
+      const result = this.db
+        .prepare('SELECT rcon_password FROM Instances WHERE id = ?')
+        .get(id) as { rcon_password: string } | undefined;
+
+      return result?.rcon_password || null;
+    } catch (error) {
+      throw new InstanceServiceError(
+        `Failed to fetch RCON password: ${(error as Error).message}`,
+        'FETCH_FAILED',
+        500,
+        error
+      );
+    }
+  }
 }
 
 // Export singleton instance

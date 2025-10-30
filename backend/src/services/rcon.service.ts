@@ -55,7 +55,8 @@ export class RconService {
     // Create new connection
     try {
       const client = new RCON();
-      await client.connect(host, port, password, 5000);
+      await client.connect(host, port, { timeout: 5000 });
+      await client.login(password);
 
       this.connections.set(instanceId, {
         client,

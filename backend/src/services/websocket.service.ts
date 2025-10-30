@@ -262,6 +262,19 @@ export class WebSocketService {
       return;
     }
 
+    // Get RCON password
+    const rconPassword = instanceService.getInstanceRconPassword(instanceId);
+    if (!rconPassword) {
+      const response: WSRconResponse = {
+        type: 'rcon_response',
+        instanceId,
+        success: false,
+        error: 'RCON password not found',
+      };
+      this.send(ws, response);
+      return;
+    }
+
     // Execute RCON command
     try {
       const result = await rconService.executeCommand(
@@ -269,7 +282,7 @@ export class WebSocketService {
         command,
         'localhost',
         instance.rconPort,
-        instance.rconPassword
+        rconPassword
       );
 
       const response: WSRconResponse = {
