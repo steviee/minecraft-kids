@@ -21,14 +21,6 @@ import type {
 } from '../types/websocket.types';
 
 /**
- * WebSocket client subscription
- */
-interface ClientSubscription {
-  ws: AuthenticatedWebSocket;
-  instanceId: number;
-}
-
-/**
  * WebSocketService manages WebSocket connections and real-time communication
  */
 export class WebSocketService {
@@ -97,7 +89,7 @@ export class WebSocketService {
 
     try {
       message = JSON.parse(data.toString());
-    } catch (error) {
+    } catch {
       this.sendError(ws, 'Invalid JSON message');
       return;
     }
@@ -151,7 +143,7 @@ export class WebSocketService {
       };
 
       this.send(ws, response);
-    } catch (error) {
+    } catch {
       const response: WSAuthResponse = {
         type: 'auth',
         success: false,
