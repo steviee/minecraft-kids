@@ -167,6 +167,19 @@ function handlePasswordBlur(): void {
   max-width: 420px;
 }
 
+@media (min-width: 768px) {
+  .login-card {
+    max-width: 500px;
+    padding: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .login-card {
+    max-width: 600px;
+  }
+}
+
 h1 {
   margin: 0 0 0.5rem 0;
   font-size: 2rem;

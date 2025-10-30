@@ -506,6 +506,19 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-content h1 {
+    font-size: 1.5rem;
+  }
 }
 
 .header-content h1 {
@@ -530,6 +543,12 @@ onMounted(() => {
   padding: 2rem;
 }
 
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+  }
+}
+
 .alert {
   padding: 1rem;
   border-radius: 8px;
@@ -548,6 +567,12 @@ onMounted(() => {
   margin-bottom: 1.5rem;
 }
 
+@media (max-width: 768px) {
+  .actions-bar {
+    flex-direction: column;
+  }
+}
+
 .loading,
 .no-users {
   background: white;
@@ -563,6 +588,12 @@ onMounted(() => {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .users-table-container {
+    overflow-x: auto;
+  }
 }
 
 .users-table {
