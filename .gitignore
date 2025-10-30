@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# MCP Configuration (may contain tokens/keys)
+.mcp.json
+
+# Build outputs
+dist/
+build/
+*.jar
+!launcher/target/*.jar
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+data/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Test coverage
+coverage/
+
+# Temporary files
+tmp/
+temp/

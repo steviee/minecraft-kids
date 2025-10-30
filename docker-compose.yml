@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/src:/app/src:ro
+      - ./backend/data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_PATH=/app/data/mck-suite.db
+      - DOCKER_SOCKET=/var/run/docker.sock
+    depends_on:
+      - minecraft-test
+    networks:
+      - mck-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    depends_on:
+      - backend
+    networks:
+      - mck-network
+
+  minecraft-test:
+    image: itzg/minecraft-server:latest
+    ports:
+      - "25565:25565"
+    volumes:
+      - minecraft-test-data:/data
+    environment:
+      - EULA=TRUE
+      - VERSION=1.20.1
+      - TYPE=FABRIC
+      - MEMORY=2G
+      - WHITELIST_ENABLED=true
+      - ENABLE_RCON=true
+      - RCON_PASSWORD=minecraft
+    networks:
+      - mck-network
+
+volumes:
+  minecraft-test-data:
+
+networks:
+  mck-network:
+    driver: bridge
