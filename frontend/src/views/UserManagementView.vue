@@ -38,8 +38,7 @@ async function fetchUsers(): Promise<void> {
   } catch (error) {
     if (error instanceof AxiosError) {
       const apiError = error.response?.data as ApiError;
-      errorMessage.value =
-        apiError?.error || 'Benutzer konnten nicht geladen werden.';
+      errorMessage.value = apiError?.error || 'Benutzer konnten nicht geladen werden.';
     } else {
       errorMessage.value = 'Ein unerwarteter Fehler ist aufgetreten.';
     }
@@ -149,8 +148,7 @@ async function handleCreateUser(): Promise<void> {
   } catch (error) {
     if (error instanceof AxiosError) {
       const apiError = error.response?.data as ApiError;
-      errorMessage.value =
-        apiError?.error || 'Benutzer konnte nicht erstellt werden.';
+      errorMessage.value = apiError?.error || 'Benutzer konnte nicht erstellt werden.';
     } else {
       errorMessage.value = 'Ein unerwarteter Fehler ist aufgetreten.';
     }
@@ -186,8 +184,7 @@ async function handleUpdateUser(): Promise<void> {
   } catch (error) {
     if (error instanceof AxiosError) {
       const apiError = error.response?.data as ApiError;
-      errorMessage.value =
-        apiError?.error || 'Benutzer konnte nicht aktualisiert werden.';
+      errorMessage.value = apiError?.error || 'Benutzer konnte nicht aktualisiert werden.';
     } else {
       errorMessage.value = 'Ein unerwarteter Fehler ist aufgetreten.';
     }
@@ -197,11 +194,7 @@ async function handleUpdateUser(): Promise<void> {
 }
 
 async function handleDeleteUser(user: User): Promise<void> {
-  if (
-    !confirm(
-      `Möchten Sie den Benutzer "${user.username}" wirklich löschen?`
-    )
-  ) {
+  if (!confirm(`Möchten Sie den Benutzer "${user.username}" wirklich löschen?`)) {
     return;
   }
 
@@ -214,8 +207,7 @@ async function handleDeleteUser(user: User): Promise<void> {
   } catch (error) {
     if (error instanceof AxiosError) {
       const apiError = error.response?.data as ApiError;
-      errorMessage.value =
-        apiError?.error || 'Benutzer konnte nicht gelöscht werden.';
+      errorMessage.value = apiError?.error || 'Benutzer konnte nicht gelöscht werden.';
     } else {
       errorMessage.value = 'Ein unerwarteter Fehler ist aufgetreten.';
     }
@@ -245,12 +237,8 @@ onMounted(() => {
         <h1>Benutzerverwaltung</h1>
         <div class="user-info">
           <span class="username">{{ authStore.user?.username }}</span>
-          <button @click="goToDashboard" class="btn btn-secondary">
-            Dashboard
-          </button>
-          <button @click="handleLogout" class="btn btn-secondary">
-            Abmelden
-          </button>
+          <button @click="goToDashboard" class="btn btn-secondary">Dashboard</button>
+          <button @click="handleLogout" class="btn btn-secondary">Abmelden</button>
         </div>
       </div>
     </header>
@@ -261,17 +249,13 @@ onMounted(() => {
       </div>
 
       <div class="actions-bar">
-        <button @click="openCreateModal" class="btn btn-primary">
-          Neuen Benutzer erstellen
-        </button>
+        <button @click="openCreateModal" class="btn btn-primary">Neuen Benutzer erstellen</button>
         <button @click="fetchUsers" class="btn btn-outline" :disabled="isLoading">
           Aktualisieren
         </button>
       </div>
 
-      <div v-if="isLoading && users.length === 0" class="loading">
-        Lädt Benutzer...
-      </div>
+      <div v-if="isLoading && users.length === 0" class="loading">Lädt Benutzer...</div>
 
       <div v-else-if="users.length > 0" class="users-table-container">
         <table class="users-table">
@@ -315,9 +299,7 @@ onMounted(() => {
                   class="btn btn-small btn-delete"
                   :disabled="isLoading || user.id === authStore.user?.id"
                   :title="
-                    user.id === authStore.user?.id
-                      ? 'Sie können sich nicht selbst löschen'
-                      : ''
+                    user.id === authStore.user?.id ? 'Sie können sich nicht selbst löschen' : ''
                   "
                 >
                   Löschen
@@ -375,12 +357,7 @@ onMounted(() => {
               required
               aria-describedby="create-email-error"
             />
-            <span
-              v-if="formErrors.email"
-              id="create-email-error"
-              class="error-text"
-              role="alert"
-            >
+            <span v-if="formErrors.email" id="create-email-error" class="error-text" role="alert">
               {{ formErrors.email }}
             </span>
           </div>
@@ -408,12 +385,7 @@ onMounted(() => {
 
           <div class="form-group">
             <label for="create-role">Rolle</label>
-            <select
-              id="create-role"
-              v-model="formData.role"
-              :disabled="isLoading"
-              required
-            >
+            <select id="create-role" v-model="formData.role" :disabled="isLoading" required>
               <option value="admin">admin</option>
               <option value="junior-admin">junior-admin</option>
             </select>
@@ -423,9 +395,7 @@ onMounted(() => {
             <button type="button" @click="closeCreateModal" class="btn btn-outline">
               Abbrechen
             </button>
-            <button type="submit" class="btn btn-primary" :disabled="isLoading">
-              Erstellen
-            </button>
+            <button type="submit" class="btn btn-primary" :disabled="isLoading">Erstellen</button>
           </div>
         </form>
       </div>
@@ -435,9 +405,7 @@ onMounted(() => {
       <div class="modal" @click.stop>
         <div class="modal-header">
           <h2>Benutzer bearbeiten</h2>
-          <button @click="closeEditModal" class="close-btn" aria-label="Schließen">
-            &times;
-          </button>
+          <button @click="closeEditModal" class="close-btn" aria-label="Schließen">&times;</button>
         </div>
 
         <form @submit.prevent="handleUpdateUser">
@@ -473,12 +441,7 @@ onMounted(() => {
               required
               aria-describedby="edit-email-error"
             />
-            <span
-              v-if="formErrors.email"
-              id="edit-email-error"
-              class="error-text"
-              role="alert"
-            >
+            <span v-if="formErrors.email" id="edit-email-error" class="error-text" role="alert">
               {{ formErrors.email }}
             </span>
           </div>
@@ -506,21 +469,14 @@ onMounted(() => {
 
           <div class="form-group">
             <label for="edit-role">Rolle</label>
-            <select
-              id="edit-role"
-              v-model="formData.role"
-              :disabled="isLoading"
-              required
-            >
+            <select id="edit-role" v-model="formData.role" :disabled="isLoading" required>
               <option value="admin">admin</option>
               <option value="junior-admin">junior-admin</option>
             </select>
           </div>
 
           <div class="modal-actions">
-            <button type="button" @click="closeEditModal" class="btn btn-outline">
-              Abbrechen
-            </button>
+            <button type="button" @click="closeEditModal" class="btn btn-outline">Abbrechen</button>
             <button type="submit" class="btn btn-primary" :disabled="isLoading">
               Aktualisieren
             </button>

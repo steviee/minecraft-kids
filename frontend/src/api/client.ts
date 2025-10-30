@@ -107,25 +107,17 @@ apiClient.interceptors.response.use(
 
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    const response = await apiClient.post<LoginResponse>(
-      '/api/auth/login',
-      credentials
-    );
+    const response = await apiClient.post<LoginResponse>('/api/auth/login', credentials);
     return response.data;
   },
 
   register: async (userData: RegisterRequest): Promise<RegisterResponse> => {
-    const response = await apiClient.post<RegisterResponse>(
-      '/api/auth/register',
-      userData
-    );
+    const response = await apiClient.post<RegisterResponse>('/api/auth/register', userData);
     return response.data;
   },
 
   refresh: async (): Promise<RefreshTokenResponse> => {
-    const response = await apiClient.post<RefreshTokenResponse>(
-      '/api/auth/refresh'
-    );
+    const response = await apiClient.post<RefreshTokenResponse>('/api/auth/refresh');
     return response.data;
   },
 };
@@ -141,10 +133,7 @@ export const usersApi = {
     return response.data;
   },
 
-  update: async (
-    id: number,
-    userData: Partial<RegisterRequest>
-  ): Promise<User> => {
+  update: async (id: number, userData: Partial<RegisterRequest>): Promise<User> => {
     const response = await apiClient.put<User>(`/api/users/${id}`, userData);
     return response.data;
   },

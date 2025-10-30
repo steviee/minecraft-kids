@@ -130,12 +130,7 @@ function handlePasswordBlur(): void {
             aria-describedby="password-error"
             @blur="handlePasswordBlur"
           />
-          <span
-            v-if="passwordError"
-            id="password-error"
-            class="error-text"
-            role="alert"
-          >
+          <span v-if="passwordError" id="password-error" class="error-text" role="alert">
             {{ passwordError }}
           </span>
         </div>

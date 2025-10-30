@@ -31,9 +31,7 @@ function navigateToUsers(): void {
           >
             {{ authStore.user?.role }}
           </span>
-          <button @click="handleLogout" class="btn btn-secondary">
-            Abmelden
-          </button>
+          <button @click="handleLogout" class="btn btn-secondary">Abmelden</button>
         </div>
       </div>
     </header>
@@ -49,24 +47,16 @@ function navigateToUsers(): void {
       <div v-if="authStore.isAdmin" class="admin-section">
         <h3>Administratorfunktionen</h3>
         <div class="admin-actions">
-          <button @click="navigateToUsers" class="btn btn-primary">
-            Benutzerverwaltung
-          </button>
-          <button class="btn btn-outline" disabled>
-            Server-Instanzen (Bald verfügbar)
-          </button>
-          <button class="btn btn-outline" disabled>
-            Einstellungen (Bald verfügbar)
-          </button>
+          <button @click="navigateToUsers" class="btn btn-primary">Benutzerverwaltung</button>
+          <button class="btn btn-outline" disabled>Server-Instanzen (Bald verfügbar)</button>
+          <button class="btn btn-outline" disabled>Einstellungen (Bald verfügbar)</button>
         </div>
       </div>
 
       <div v-else class="junior-admin-section">
         <h3>Ihre zugewiesenen Server</h3>
         <div class="info-card">
-          <p>
-            Hier werden Ihre zugewiesenen Minecraft-Server-Instanzen angezeigt.
-          </p>
+          <p>Hier werden Ihre zugewiesenen Minecraft-Server-Instanzen angezeigt.</p>
           <p class="note">Diese Funktion wird in Phase 2 implementiert.</p>
         </div>
       </div>

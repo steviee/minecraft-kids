@@ -114,9 +114,7 @@ describe('LoginView', () => {
     });
 
     const authStore = useAuthStore();
-    vi.spyOn(authStore, 'login').mockImplementation(
-      () => new Promise(() => {})
-    );
+    vi.spyOn(authStore, 'login').mockImplementation(() => new Promise(() => {}));
 
     const emailInput = wrapper.find('input[type="email"]');
     const passwordInput = wrapper.find('input[type="password"]');
@@ -129,11 +127,7 @@ describe('LoginView', () => {
 
     await wrapper.vm.$nextTick();
 
-    expect(
-      (emailInput.element as HTMLInputElement).disabled
-    ).toBe(true);
-    expect(
-      (passwordInput.element as HTMLInputElement).disabled
-    ).toBe(true);
+    expect((emailInput.element as HTMLInputElement).disabled).toBe(true);
+    expect((passwordInput.element as HTMLInputElement).disabled).toBe(true);
   });
 });

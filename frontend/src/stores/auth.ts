@@ -29,11 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function saveToStorage(
-    newAccessToken: string,
-    newRefreshToken: string,
-    newUser: User
-  ): void {
+  function saveToStorage(newAccessToken: string, newRefreshToken: string, newUser: User): void {
     localStorage.setItem('accessToken', newAccessToken);
     localStorage.setItem('refreshToken', newRefreshToken);
     localStorage.setItem('user', JSON.stringify(newUser));
