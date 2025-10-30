@@ -1,10 +1,57 @@
-version: '3.8'
+version: '3.9'
 
 services:
+  # Traefik Reverse Proxy
+  traefik:
+    image: traefik:v3.0
+    container_name: mck-traefik
+    restart: unless-stopped
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.minecraft.address=:25565
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Traefik Dashboard
+      - "25565:25565"  # Minecraft default port
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docker/traefik:/etc/traefik
+    networks:
+      - mck-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.mck.local`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+
+  # Unbound DNS Server
+  unbound:
+    image: mvance/unbound:latest
+    container_name: mck-unbound
+    restart: unless-stopped
+    ports:
+      - "5353:53/tcp"  # Use port 5353 to avoid conflicts with host DNS
+      - "5353:53/udp"
+    volumes:
+      - ./docker/unbound:/opt/unbound/etc/unbound
+      - unbound-data:/opt/unbound/etc/unbound/var
+    networks:
+      - mck-network
+    environment:
+      - TZ=Europe/Berlin
+
+  # Backend API
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
+    container_name: mck-backend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
@@ -14,49 +61,111 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production}
       - DATABASE_PATH=/app/data/mck-suite.db
       - DOCKER_SOCKET=/var/run/docker.sock
-    depends_on:
-      - minecraft-test
     networks:
       - mck-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.mck.local`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
+    depends_on:
+      - traefik
+      - minecraft-test
 
+  # Frontend Web App
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
+    container_name: mck-frontend
+    restart: unless-stopped
     ports:
       - "5173:5173"
     volumes:
       - ./frontend/src:/app/src:ro
       - ./frontend/public:/app/public:ro
     environment:
-      - VITE_API_URL=http://localhost:3000
-    depends_on:
-      - backend
+      - VITE_API_URL=http://api.mck.local
     networks:
       - mck-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`mck.local`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=5173"
+    depends_on:
+      - traefik
+      - backend
 
+  # Test Minecraft Server
   minecraft-test:
     image: itzg/minecraft-server:latest
+    container_name: mck-minecraft-test
+    restart: unless-stopped
     ports:
-      - "25565:25565"
+      - "25566:25565"  # Direct access on different port for testing
     volumes:
       - minecraft-test-data:/data
     environment:
       - EULA=TRUE
-      - VERSION=1.20.1
+      - VERSION=1.20.4
       - TYPE=FABRIC
       - MEMORY=2G
       - WHITELIST_ENABLED=true
       - ENABLE_RCON=true
-      - RCON_PASSWORD=minecraft
+      - RCON_PASSWORD=${RCON_PASSWORD:-minecraft}
+      - RCON_PORT=25575
+      - SERVER_NAME=Test Server
+      - MOTD=MCK Suite - Test Server
     networks:
       - mck-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.minecraft-test.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.minecraft-test.entrypoints=minecraft"
+      - "traefik.tcp.services.minecraft-test.loadbalancer.server.port=25565"
 
-volumes:
-  minecraft-test-data:
+  # Example: Survival Server (can be started separately)
+  minecraft-survival:
+    image: itzg/minecraft-server:latest
+    container_name: mck-minecraft-survival
+    restart: unless-stopped
+    ports:
+      - "25567:25565"  # Direct access
+    volumes:
+      - minecraft-survival-data:/data
+    environment:
+      - EULA=TRUE
+      - TYPE=FABRIC
+      - VERSION=1.20.4
+      - MEMORY=2G
+      - SERVER_NAME=Survival
+      - MOTD=MCK Suite - Survival Server
+      - DIFFICULTY=normal
+      - MODE=survival
+      - ENABLE_RCON=true
+      - RCON_PASSWORD=${RCON_PASSWORD:-minecraft}
+      - RCON_PORT=25575
+    networks:
+      - mck-network
+    profiles:
+      - extra  # Only start with: docker-compose --profile extra up
+    labels:
+      - "mck.server.name=survival"
+      - "mck.server.subdomain=survival.mc.mck.local"
 
 networks:
   mck-network:
+    name: mck-network
     driver: bridge
+
+volumes:
+  unbound-data:
+    name: mck-unbound-data
+  minecraft-test-data:
+    name: mck-minecraft-test-data
+  minecraft-survival-data:
+    name: mck-minecraft-survival-data
