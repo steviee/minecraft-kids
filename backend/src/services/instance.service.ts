@@ -82,7 +82,9 @@ export class InstanceService {
     return {
       serverPorts: instances.map((i) => i.server_port),
       rconPorts: instances.map((i) => i.rcon_port),
-      voiceChatPorts: instances.map((i) => i.voice_chat_port).filter((p): p is number => p !== null),
+      voiceChatPorts: instances
+        .map((i) => i.voice_chat_port)
+        .filter((p): p is number => p !== null),
       geyserPorts: instances.map((i) => i.geyser_port).filter((p): p is number => p !== null),
     };
   }
@@ -300,9 +302,9 @@ export class InstanceService {
    */
   getInstanceById(id: number): InstanceData | null {
     try {
-      const instance = this.db
-        .prepare('SELECT * FROM Instances WHERE id = ?')
-        .get(id) as InstanceRecord | undefined;
+      const instance = this.db.prepare('SELECT * FROM Instances WHERE id = ?').get(id) as
+        | InstanceRecord
+        | undefined;
 
       return instance ? instanceRecordToData(instance) : null;
     } catch (error) {
@@ -320,9 +322,9 @@ export class InstanceService {
    */
   getInstanceByName(name: string): InstanceData | null {
     try {
-      const instance = this.db
-        .prepare('SELECT * FROM Instances WHERE name = ?')
-        .get(name) as InstanceRecord | undefined;
+      const instance = this.db.prepare('SELECT * FROM Instances WHERE name = ?').get(name) as
+        | InstanceRecord
+        | undefined;
 
       return instance ? instanceRecordToData(instance) : null;
     } catch (error) {

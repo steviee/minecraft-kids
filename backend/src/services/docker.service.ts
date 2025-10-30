@@ -114,9 +114,7 @@ export class DockerService {
 
       // Check if container already exists
       const existingContainers = await this.docker.listContainers({ all: true });
-      const containerExists = existingContainers.some(
-        (c) => c.Names.includes(`/${containerName}`)
-      );
+      const containerExists = existingContainers.some((c) => c.Names.includes(`/${containerName}`));
 
       if (containerExists) {
         throw new DockerServiceError(
@@ -349,10 +347,7 @@ export class DockerService {
   /**
    * Get container logs
    */
-  async getLogs(
-    containerName: string,
-    options: ContainerLogsOptions = {}
-  ): Promise<string> {
+  async getLogs(containerName: string, options: ContainerLogsOptions = {}): Promise<string> {
     try {
       const fullContainerName = this.getContainerName(containerName);
       const container = this.docker.getContainer(fullContainerName);
