@@ -5,16 +5,16 @@
  */
 
 import type Database from 'better-sqlite3';
-import { getDatabase } from '../database/db.js';
-import { dockerService } from './docker.service.js';
+import { getDatabase } from '../database/db';
+import { dockerService } from './docker.service';
 import {
   InstanceRecord,
   InstanceData,
   CreateInstanceRequest,
   UpdateInstanceRequest,
   instanceRecordToData,
-} from '../types/instance.types.js';
-import { DockerServiceError, ContainerOperationResult } from '../types/docker.types.js';
+} from '../types/instance.types';
+import { DockerServiceError, ContainerOperationResult } from '../types/docker.types';
 
 /**
  * Custom error class for Instance operations

@@ -1,7 +1,7 @@
 /**
  * Middleware exports
  */
-export { authenticateToken, optionalAuth } from './auth.middleware.js';
+export { authenticateToken, optionalAuth } from './auth.middleware';
 export {
   requireRole,
   requireAdmin,
@@ -9,4 +9,4 @@ export {
   requireUserManagementAccess,
   requireSelfOrAdmin,
   setTestDatabase,
-} from './rbac.middleware.js';
+} from './rbac.middleware';

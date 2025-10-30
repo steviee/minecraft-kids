@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
-import { verifyAccessToken } from '../services/auth.service.js';
-import { AuthenticatedRequest } from '../types/middleware.types.js';
+import { verifyAccessToken } from '../services/auth.service';
+import { AuthenticatedRequest } from '../types/middleware.types';
 
 /**
  * Authentication middleware that verifies JWT tokens

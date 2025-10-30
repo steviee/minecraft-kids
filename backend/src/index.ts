@@ -1,10 +1,12 @@
 import express, { Request, Response } from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { initializeDatabase } from './database';
 import authRoutes from './routes/auth.routes';
-import instanceRoutes from './routes/instance.routes.js';
-import publicRoutes from './routes/public.routes.js';
+import instanceRoutes from './routes/instance.routes';
+import publicRoutes from './routes/public.routes';
+import { websocketService } from './services/websocket.service';
 
 dotenv.config();
 
@@ -34,8 +36,22 @@ async function startServer() {
     await initializeDatabase();
     console.log('Database initialized successfully');
 
-    app.listen(PORT, () => {
+    const server = createServer(app);
+
+    websocketService.initialize(server);
+
+    server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      console.log(`WebSocket server available at ws://localhost:${PORT}/ws`);
+    });
+
+    process.on('SIGTERM', async () => {
+      console.log('SIGTERM received, shutting down gracefully');
+      await websocketService.shutdown();
+      server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+      });
     });
   } catch (error) {
     console.error('Failed to start server:', error);

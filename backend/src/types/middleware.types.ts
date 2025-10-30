@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { TokenPayload } from './auth.types.js';
+import { TokenPayload } from './auth.types';
 
 /**
  * Extended Express Request with authenticated user data

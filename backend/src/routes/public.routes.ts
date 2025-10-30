@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { instanceService } from '../services/instance.service.js';
+import { instanceService } from '../services/instance.service';
 
 const router = Router();
 

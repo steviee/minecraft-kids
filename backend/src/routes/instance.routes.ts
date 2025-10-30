@@ -4,16 +4,16 @@
  */
 
 import { Router, Response } from 'express';
-import { instanceService, InstanceServiceError } from '../services/instance.service.js';
-import { authenticateToken } from '../middleware/auth.middleware.js';
-import { requireAdmin, requireInstanceAccess } from '../middleware/rbac.middleware.js';
-import { AuthenticatedRequest } from '../types/middleware.types.js';
+import { instanceService, InstanceServiceError } from '../services/instance.service';
+import { authenticateToken } from '../middleware/auth.middleware';
+import { requireAdmin, requireInstanceAccess } from '../middleware/rbac.middleware';
+import { AuthenticatedRequest } from '../types/middleware.types';
 import {
   CreateInstanceRequest,
   UpdateInstanceRequest,
   InstanceOperationResponse,
   ListInstancesResponse,
-} from '../types/instance.types.js';
+} from '../types/instance.types';
 
 const router = Router();
 

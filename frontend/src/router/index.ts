@@ -28,6 +28,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: 'Dashboard' },
       },
       {
+        path: 'instances/:id/console',
+        name: 'console',
+        component: () => import('../views/ConsoleView.vue'),
+        meta: { title: 'Live-Konsole' },
+      },
+      {
         path: 'admin/users',
         name: 'users',
         component: () => import('../views/UserManagementView.vue'),
