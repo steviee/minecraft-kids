@@ -60,7 +60,7 @@ export function authenticateToken(
  * @param res - Express response
  * @param next - Next middleware function
  */
-export function optionalAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export function optionalAuth(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
 

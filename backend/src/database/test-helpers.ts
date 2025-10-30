@@ -74,7 +74,7 @@ export function insertTestUser(email: string, role: string, username: string): n
  */
 export function insertTestInstance(
   name: string,
-  displayName: string,
+  _displayName: string,
   createdBy: number,
   serverPort?: number,
   rconPort?: number
