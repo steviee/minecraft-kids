@@ -232,9 +232,9 @@ function isActiveRoute(path: string): boolean {
 .main-content {
   display: flex;
   flex-direction: column;
-  min-block-size: 100vh;
-  min-block-size: 100dvh;
-  overflow-x: hidden;
+  block-size: 100vh;
+  block-size: 100dvh;
+  overflow: hidden;
 }
 
 /* Top Header */
@@ -246,8 +246,7 @@ function isActiveRoute(path: string): boolean {
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 8px oklch(0% 0 0 / 0.05);
-  position: sticky;
-  top: 0;
+  flex-shrink: 0;
   z-index: 10;
 }
 
