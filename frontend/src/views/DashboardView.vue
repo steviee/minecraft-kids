@@ -65,36 +65,41 @@ function navigateToUsers(): void {
 </template>
 
 <style scoped>
+/* Modern 2025 CSS for Dashboard */
 .dashboard-container {
-  min-height: 100vh;
-  background-color: #f7fafc;
+  min-block-size: 100vh;
+  min-block-size: 100dvh;
+  background-color: oklch(97% 0 0);
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 1.5rem 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, oklch(65% 0.15 264) 0%, oklch(55% 0.18 308) 100%);
+  color: oklch(100% 0 0);
+  padding-block: 1.5rem;
+  padding-inline: clamp(1rem, 4vw, 3rem);
+  box-shadow: 0 4px 16px oklch(0% 0 0 / 0.1);
 }
 
 .header-content {
-  max-width: 1400px;
-  margin: 0 auto;
+  max-inline-size: min(1600px, 90vw);
+  margin-inline: auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
 }
 
-@media (max-width: 768px) {
+@media (width < 768px) {
   .header-content {
     flex-direction: column;
     align-items: flex-start;
   }
 
   .header-content h1 {
-    font-size: 1.5rem;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
   }
 }
 
@@ -133,23 +138,31 @@ function navigateToUsers(): void {
 }
 
 .dashboard-main {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
+  inline-size: 100%;
+  max-inline-size: min(1600px, 90vw);
+  margin-inline: auto;
+  padding-block: clamp(1.5rem, 3vw, 3rem);
+  padding-inline: clamp(1rem, 4vw, 3rem);
+  flex: 1;
+  container-type: inline-size;
+  container-name: dashboard-main;
+  box-sizing: border-box;
 }
 
-@media (max-width: 768px) {
+@media (width < 768px) {
   .dashboard-main {
-    padding: 1rem;
+    padding-block: 1.5rem;
+    padding-inline: 1rem;
   }
 }
 
 .welcome-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  background: oklch(100% 0 0);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px oklch(0% 0 0 / 0.08);
+  margin-block-end: clamp(1.5rem, 3vw, 2.5rem);
+  border: 1px solid oklch(95% 0 0);
 }
 
 .welcome-card h2 {
@@ -181,8 +194,21 @@ function navigateToUsers(): void {
 
 .admin-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+/* Use container queries for better responsiveness */
+@container dashboard-main (min-width: 900px) {
+  .admin-actions {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@container dashboard-main (min-width: 1200px) {
+  .admin-actions {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
 }
 
 .info-card {
