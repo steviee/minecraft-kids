@@ -29,7 +29,7 @@ class DatabaseTestSuite {
 
     this.dbConnection = new DatabaseConnection({
       filename: this.testDbPath,
-      verbose: undefined
+      verbose: undefined,
     });
   }
 
@@ -45,7 +45,7 @@ class DatabaseTestSuite {
       this.results.push({
         name,
         passed: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       console.error(`✗ ${name}`);
       console.error(`  Error: ${error instanceof Error ? error.message : String(error)}`);
@@ -119,7 +119,7 @@ class DatabaseTestSuite {
       'SettingTemplates',
       'SharedUserGroups',
       'InstanceSharedGroups',
-      'WhitelistRequests'
+      'WhitelistRequests',
     ];
 
     const stmt = db.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
@@ -142,7 +142,7 @@ class DatabaseTestSuite {
     const requiredViews = [
       'InstancePermissionsView',
       'PendingWhitelistRequestsView',
-      'InstanceStatsView'
+      'InstanceStatsView',
     ];
 
     const stmt = db.prepare("SELECT name FROM sqlite_master WHERE type='view' ORDER BY name");
@@ -162,7 +162,9 @@ class DatabaseTestSuite {
   private testIndexesExist(): void {
     const db = this.dbConnection.getDb();
 
-    const stmt = db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%'");
+    const stmt = db.prepare(
+      "SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%'"
+    );
     const indexes = stmt.all() as Array<{ name: string }>;
 
     if (indexes.length === 0) {
@@ -182,7 +184,7 @@ class DatabaseTestSuite {
       'update_users_timestamp',
       'update_instances_timestamp',
       'update_setting_templates_timestamp',
-      'update_shared_user_groups_timestamp'
+      'update_shared_user_groups_timestamp',
     ];
 
     const stmt = db.prepare("SELECT name FROM sqlite_master WHERE type='trigger' ORDER BY name");
@@ -206,7 +208,7 @@ class DatabaseTestSuite {
       adminUsername: 'testadmin',
       adminEmail: 'testadmin@test.com',
       adminPassword: 'testpass123',
-      includeTestData: false
+      includeTestData: false,
     });
 
     const stmt = db.prepare('SELECT * FROM Users WHERE username = ?');
@@ -404,7 +406,9 @@ class DatabaseTestSuite {
     await this.runTest('8. Seed admin user', () => this.testSeedAdminUser());
     await this.runTest('9. User CRUD operations', () => this.testUserOperations());
     await this.runTest('10. Instance CRUD operations', () => this.testInstanceOperations());
-    await this.runTest('11. Foreign key constraint enforcement', () => this.testForeignKeyConstraints());
+    await this.runTest('11. Foreign key constraint enforcement', () =>
+      this.testForeignKeyConstraints()
+    );
     await this.runTest('12. Unique constraint enforcement', () => this.testUniqueConstraints());
     await this.runTest('13. Timestamp triggers', () => this.testTimestampTriggers());
     await this.runTest('14. Database statistics', () => this.testDatabaseStats());

@@ -10,7 +10,7 @@ import {
   seedAdminUser,
   User,
   Instance,
-  CreateInstanceData
+  CreateInstanceData,
 } from './index';
 
 /**
@@ -24,7 +24,7 @@ async function example1_InitializeAndSeed(): Promise<void> {
   await seedAdminUser(getDatabase(), {
     adminUsername: 'admin',
     adminEmail: 'admin@minecraft-kids.de',
-    adminPassword: 'securepassword123'
+    adminPassword: 'securepassword123',
   });
 
   console.log('Database initialized and seeded\n');
@@ -73,7 +73,7 @@ function example3_CreateInstance(): void {
     rcon_password: 'minecraft123',
     max_players: 20,
     memory_allocation: '4G',
-    created_by: admin.id
+    created_by: admin.id,
   };
 
   try {
@@ -153,8 +153,9 @@ function example5_QueryViews(): void {
   if (stats.length === 0) {
     console.log('  No instances found');
   } else {
-    stats.forEach((stat: any) => {
-      console.log(`  - ${stat.name}: ${stat.status} (created by ${stat.created_by_username})`);
+    stats.forEach((stat: unknown) => {
+      const s = stat as { name: string; status: string; created_by_username: string };
+      console.log(`  - ${s.name}: ${s.status} (created by ${s.created_by_username})`);
     });
   }
   console.log('');
@@ -214,5 +215,5 @@ export {
   example3_CreateInstance,
   example4_Transactions,
   example5_QueryViews,
-  example6_PreparedStatements
+  example6_PreparedStatements,
 };

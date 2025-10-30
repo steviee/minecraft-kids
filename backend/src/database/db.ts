@@ -30,7 +30,7 @@ class DatabaseConnection {
       filename: process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'mck-suite.db'),
       readonly: false,
       verbose: process.env.NODE_ENV === 'development' ? console.log : undefined,
-      fileMustExist: false
+      fileMustExist: false,
     };
 
     this.config = { ...defaultConfig, ...config };
@@ -75,7 +75,7 @@ class DatabaseConnection {
       this.db = new Database(this.config.filename, {
         readonly: this.config.readonly,
         verbose: this.config.verbose,
-        fileMustExist: this.config.fileMustExist
+        fileMustExist: this.config.fileMustExist,
       });
 
       this.enableForeignKeys();
@@ -140,7 +140,7 @@ class DatabaseConnection {
       'SettingTemplates',
       'SharedUserGroups',
       'InstanceSharedGroups',
-      'WhitelistRequests'
+      'WhitelistRequests',
     ];
 
     try {
@@ -182,17 +182,19 @@ class DatabaseConnection {
       .all() as Array<{ name: string }>;
 
     const tablesWithRows = tables.map((table) => {
-      const countResult = this.db!.prepare(`SELECT COUNT(*) as count FROM ${table.name}`).get() as { count: number };
+      const countResult = this.db!.prepare(`SELECT COUNT(*) as count FROM ${table.name}`).get() as {
+        count: number;
+      };
       return {
         name: table.name,
-        rows: countResult.count
+        rows: countResult.count,
       };
     });
 
     return {
       filename: this.config.filename,
       size: stats.size,
-      tables: tablesWithRows
+      tables: tablesWithRows,
     };
   }
 

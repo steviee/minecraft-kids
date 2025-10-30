@@ -3,7 +3,13 @@
  * Provides centralized access to all database functionality
  */
 
-export { dbConnection, DatabaseConnection, initializeDatabase, getDatabase, closeDatabase } from './db';
+export {
+  dbConnection,
+  DatabaseConnection,
+  initializeDatabase,
+  getDatabase,
+  closeDatabase,
+} from './db';
 
 export { MigrationManager, runMigrations, getMigrationStatus } from './migrations';
 

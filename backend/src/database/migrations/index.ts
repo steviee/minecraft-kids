@@ -59,7 +59,7 @@ export class MigrationManager {
         return {
           id: parseInt(match[1], 10),
           name: match[2],
-          filename
+          filename,
         };
       })
       .filter((m): m is Migration => m !== null)
@@ -98,9 +98,7 @@ export class MigrationManager {
       this.db.exec(sql);
 
       this.db
-        .prepare(
-          'INSERT INTO _migrations (id, name, filename) VALUES (?, ?, ?)'
-        )
+        .prepare('INSERT INTO _migrations (id, name, filename) VALUES (?, ?, ?)')
         .run(migration.id, migration.name, migration.filename);
     });
 
