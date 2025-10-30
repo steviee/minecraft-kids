@@ -7,6 +7,7 @@
 import type Database from 'better-sqlite3';
 import { getDatabase } from '../database/db';
 import { dockerService } from './docker.service';
+import { minecraftVersionsService } from './minecraft-versions.service';
 import {
   InstanceRecord,
   InstanceData,
@@ -35,10 +36,20 @@ export class InstanceServiceError extends Error {
  * InstanceService handles all instance-related operations
  */
 export class InstanceService {
-  private db: Database.Database;
+  private _db?: Database.Database;
 
   constructor(db?: Database.Database) {
-    this.db = db || getDatabase();
+    this._db = db;
+  }
+
+  /**
+   * Get database instance (lazy loading)
+   */
+  private get db(): Database.Database {
+    if (!this._db) {
+      this._db = getDatabase();
+    }
+    return this._db;
   }
 
   /**
@@ -170,16 +181,52 @@ export class InstanceService {
   }
 
   /**
-   * Create a new instance
+   * Validate Minecraft and Fabric versions
+   */
+  private async validateVersions(request: CreateInstanceRequest): Promise<void> {
+    // Validate Minecraft version if provided
+    if (request.minecraftVersion) {
+      const isValidMinecraft = await minecraftVersionsService.isValidMinecraftVersion(
+        request.minecraftVersion
+      );
+      if (!isValidMinecraft) {
+        throw new InstanceServiceError(
+          `Invalid Minecraft version: ${request.minecraftVersion}`,
+          'INVALID_MINECRAFT_VERSION',
+          400
+        );
+      }
+    }
+
+    // Validate Fabric version if provided
+    if (request.fabricVersion) {
+      const isValidFabric = await minecraftVersionsService.isValidFabricVersion(
+        request.fabricVersion
+      );
+      if (!isValidFabric) {
+        throw new InstanceServiceError(
+          `Invalid Fabric version: ${request.fabricVersion}`,
+          'INVALID_FABRIC_VERSION',
+          400
+        );
+      }
+    }
+  }
+
+  /**
+   * Create a new instance with transaction support for atomicity
    */
   async createInstance(request: CreateInstanceRequest, createdBy: number): Promise<InstanceData> {
+    let containerResult: ContainerOperationResult | null = null;
+
     try {
-      // Validate inputs
+      // Validate inputs first (before any side effects)
       this.validateInstanceName(request.name);
       this.validatePorts(request);
+      await this.validateVersions(request);
 
-      // Create Docker container first
-      const containerResult = await dockerService.createInstance({
+      // Create Docker container
+      containerResult = await dockerService.createInstance({
         ...request,
         createdBy,
       });
@@ -192,47 +239,56 @@ export class InstanceService {
         );
       }
 
-      // Insert into database
-      const insert = this.db.prepare(`
-        INSERT INTO Instances (
-          name, minecraft_version, fabric_version,
-          server_port, rcon_port, rcon_password,
-          voice_chat_port, geyser_enabled, geyser_port,
-          max_players, memory_allocation, status,
-          container_id, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      const result = insert.run(
-        request.name,
-        request.minecraftVersion || null,
-        request.fabricVersion || null,
-        request.serverPort,
-        request.rconPort,
-        request.rconPassword,
-        request.voiceChatPort || null,
-        request.geyserEnabled ? 1 : 0,
-        request.geyserPort || null,
-        request.maxPlayers || 20,
-        request.memoryAllocation || '2G',
-        'stopped',
-        containerResult.containerId,
-        createdBy
-      );
-
-      const instanceId = result.lastInsertRowid as number;
-
-      // Assign Junior-Admins if specified
-      if (request.assignedJuniorAdmins && request.assignedJuniorAdmins.length > 0) {
-        const assignStmt = this.db.prepare(`
-          INSERT INTO UserInstancePermissions (user_id, instance_id, granted_by)
-          VALUES (?, ?, ?)
+      // Use transaction for database operations
+      // If any database operation fails, the transaction will rollback automatically
+      const createTransaction = this.db.transaction(() => {
+        // Insert into database
+        const insert = this.db.prepare(`
+          INSERT INTO Instances (
+            name, minecraft_version, fabric_version,
+            server_port, rcon_port, rcon_password,
+            voice_chat_port, geyser_enabled, geyser_port,
+            max_players, memory_allocation, status,
+            container_id, created_by
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
 
-        for (const juniorAdminId of request.assignedJuniorAdmins) {
-          assignStmt.run(juniorAdminId, instanceId, createdBy);
+        const result = insert.run(
+          request.name,
+          request.minecraftVersion || null,
+          request.fabricVersion || null,
+          request.serverPort,
+          request.rconPort,
+          request.rconPassword,
+          request.voiceChatPort || null,
+          request.geyserEnabled ? 1 : 0,
+          request.geyserPort || null,
+          request.maxPlayers || 20,
+          request.memoryAllocation || '2G',
+          'stopped',
+          containerResult!.containerId,
+          createdBy
+        );
+
+        const instanceId = result.lastInsertRowid as number;
+
+        // Assign Junior-Admins if specified
+        if (request.assignedJuniorAdmins && request.assignedJuniorAdmins.length > 0) {
+          const assignStmt = this.db.prepare(`
+            INSERT INTO UserInstancePermissions (user_id, instance_id, granted_by)
+            VALUES (?, ?, ?)
+          `);
+
+          for (const juniorAdminId of request.assignedJuniorAdmins) {
+            assignStmt.run(juniorAdminId, instanceId, createdBy);
+          }
         }
-      }
+
+        return instanceId;
+      });
+
+      // Execute transaction
+      const instanceId = createTransaction();
 
       // Fetch and return the created instance
       const instance = this.getInstanceById(instanceId);
@@ -242,6 +298,19 @@ export class InstanceService {
 
       return instance;
     } catch (error) {
+      // If database operations failed and we created a container, clean it up
+      if (containerResult?.containerId) {
+        try {
+          console.error(
+            `Database operation failed, cleaning up container ${containerResult.containerId}`
+          );
+          await dockerService.deleteContainer(request.name, true);
+        } catch (cleanupError) {
+          console.error('Failed to clean up container after database error:', cleanupError);
+        }
+      }
+
+      // Re-throw the original error
       if (error instanceof InstanceServiceError) {
         throw error;
       }

@@ -6,6 +6,7 @@ import { initializeDatabase } from './database';
 import authRoutes from './routes/auth.routes';
 import instanceRoutes from './routes/instance.routes';
 import publicRoutes from './routes/public.routes';
+import minecraftVersionsRoutes from './routes/minecraft-versions.routes';
 import { websocketService } from './services/websocket.service';
 
 dotenv.config();
@@ -30,6 +31,7 @@ app.get('/api', (_req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/instances', instanceRoutes);
+app.use('/api/minecraft-versions', minecraftVersionsRoutes);
 
 async function startServer() {
   try {

@@ -21,6 +21,46 @@ const router = Router();
 router.use(authenticateToken);
 
 /**
+ * GET /api/instances/available-ports
+ * Get available ports for new instance
+ */
+router.get('/available-ports', async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    // Get used ports from instance service
+    const usedPorts = (instanceService as any).getUsedPorts();
+
+    // Suggest next available ports starting from defaults
+    const suggestPort = (startPort: number, usedPorts: number[]): number => {
+      let port = startPort;
+      while (usedPorts.includes(port)) {
+        port++;
+      }
+      return port;
+    };
+
+    const suggestions = {
+      serverPort: suggestPort(25565, usedPorts.serverPorts),
+      rconPort: suggestPort(25575, usedPorts.rconPorts),
+      voiceChatPort: suggestPort(24454, usedPorts.voiceChatPorts),
+      geyserPort: suggestPort(19132, usedPorts.geyserPorts),
+    };
+
+    res.json({
+      success: true,
+      usedPorts,
+      suggestions,
+    });
+  } catch (error) {
+    console.error('Error fetching available ports:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'Failed to fetch available ports',
+    });
+  }
+});
+
+/**
  * GET /api/instances
  * List all instances (filtered by role)
  * - Admins see all instances
@@ -91,6 +131,12 @@ router.post('/', requireAdmin, async (req: AuthenticatedRequest, res: Response):
     res.status(201).json(response);
   } catch (error) {
     if (error instanceof InstanceServiceError) {
+      console.error('InstanceServiceError:', {
+        code: error.code,
+        message: error.message,
+        statusCode: error.statusCode,
+        details: error.details,
+      });
       res.status(error.statusCode).json({
         success: false,
         error: error.code,
@@ -100,10 +146,13 @@ router.post('/', requireAdmin, async (req: AuthenticatedRequest, res: Response):
     }
 
     console.error('Error creating instance:', error);
+    console.error('Error stack:', (error as Error).stack);
+    console.error('Request body:', req.body);
     res.status(500).json({
       success: false,
       error: 'Internal Server Error',
       message: 'Failed to create instance',
+      details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined,
     });
   }
 });

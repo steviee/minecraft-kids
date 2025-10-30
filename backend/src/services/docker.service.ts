@@ -108,19 +108,31 @@ export class DockerService {
    */
   async createInstance(config: CreateInstanceConfig): Promise<ContainerOperationResult> {
     try {
+      console.log('Creating Docker instance with config:', JSON.stringify(config, null, 2));
       const containerName = this.getContainerName(config.name);
       const volumeName = this.getVolumeName(config.name);
       const hostname = this.getHostname(config.name);
+      console.log(`Container name: ${containerName}, Volume: ${volumeName}, Hostname: ${hostname}`);
 
-      // Check if container already exists
+      // Check if container already exists and remove it
       const existingContainers = await this.docker.listContainers({ all: true });
-      const containerExists = existingContainers.some((c) => c.Names.includes(`/${containerName}`));
+      const existingContainer = existingContainers.find((c) =>
+        c.Names.includes(`/${containerName}`)
+      );
 
-      if (containerExists) {
-        throw new DockerServiceError(
-          `Container with name ${containerName} already exists`,
-          'CONTAINER_EXISTS'
-        );
+      if (existingContainer) {
+        console.log(`Container ${containerName} already exists, removing it...`);
+        const container = this.docker.getContainer(existingContainer.Id);
+
+        // Stop if running
+        const info = await container.inspect();
+        if (info.State.Running) {
+          await container.stop();
+        }
+
+        // Remove container
+        await container.remove({ force: true });
+        console.log(`Container ${containerName} removed successfully`);
       }
 
       // Create volume for persistent data
@@ -198,6 +210,8 @@ export class DockerService {
         containerId: container.id,
       };
     } catch (error) {
+      console.error('Docker instance creation failed:', error);
+      console.error('Error details:', (error as any)?.json || (error as Error).message);
       if (error instanceof DockerServiceError) {
         throw error;
       }
