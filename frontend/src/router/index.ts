@@ -6,7 +6,9 @@ import MainLayout from '../layouts/MainLayout.vue';
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/dashboard',
+    name: 'public-status',
+    component: () => import('../views/PublicStatusView.vue'),
+    meta: { title: 'Server Status' },
   },
   {
     path: '/login',

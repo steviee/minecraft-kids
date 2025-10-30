@@ -7,6 +7,14 @@ import type {
   RefreshTokenResponse,
   User,
 } from '../types/auth';
+import type {
+  CreateInstanceRequest,
+  UpdateInstanceRequest,
+  InstanceOperationResponse,
+  ListInstancesResponse,
+  InstanceActionResponse,
+  InstanceLogsResponse,
+} from '../types/instance';
 
 const API_BASE_URL = 'http://localhost:3000';
 
@@ -140,5 +148,53 @@ export const usersApi = {
 
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/api/users/${id}`);
+  },
+};
+
+export const instancesApi = {
+  getAll: async (): Promise<ListInstancesResponse> => {
+    const response = await apiClient.get<ListInstancesResponse>('/api/instances');
+    return response.data;
+  },
+
+  getById: async (id: number): Promise<InstanceOperationResponse> => {
+    const response = await apiClient.get<InstanceOperationResponse>(`/api/instances/${id}`);
+    return response.data;
+  },
+
+  create: async (data: CreateInstanceRequest): Promise<InstanceOperationResponse> => {
+    const response = await apiClient.post<InstanceOperationResponse>('/api/instances', data);
+    return response.data;
+  },
+
+  update: async (id: number, data: UpdateInstanceRequest): Promise<InstanceOperationResponse> => {
+    const response = await apiClient.patch<InstanceOperationResponse>(`/api/instances/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await apiClient.delete(`/api/instances/${id}`);
+  },
+
+  start: async (id: number): Promise<InstanceActionResponse> => {
+    const response = await apiClient.post<InstanceActionResponse>(`/api/instances/${id}/start`);
+    return response.data;
+  },
+
+  stop: async (id: number): Promise<InstanceActionResponse> => {
+    const response = await apiClient.post<InstanceActionResponse>(`/api/instances/${id}/stop`);
+    return response.data;
+  },
+
+  restart: async (id: number): Promise<InstanceActionResponse> => {
+    const response = await apiClient.post<InstanceActionResponse>(`/api/instances/${id}/restart`);
+    return response.data;
+  },
+
+  getLogs: async (id: number, tail = 100): Promise<InstanceLogsResponse> => {
+    const response = await apiClient.get<InstanceLogsResponse>(`/api/instances/${id}/logs`, {
+      params: { tail },
+    });
+    return response.data;
   },
 };
