@@ -24,7 +24,7 @@ export interface SeedOptions {
 const DEFAULT_ADMIN_CREDENTIALS = {
   username: 'admin',
   email: 'admin@minecraft-kids.de',
-  password: 'admin123'
+  password: 'admin123',
 };
 
 /**
@@ -63,12 +63,7 @@ export class DatabaseSeeder {
       VALUES (?, ?, ?, ?)
     `);
 
-    const info = stmt.run(
-      userData.username,
-      userData.email,
-      userData.password_hash,
-      userData.role
-    );
+    const info = stmt.run(userData.username, userData.email, userData.password_hash, userData.role);
 
     const selectStmt = this.db.prepare('SELECT * FROM Users WHERE id = ?');
     const user = selectStmt.get(info.lastInsertRowid) as User;
@@ -97,7 +92,7 @@ export class DatabaseSeeder {
       username,
       email,
       password_hash: passwordHash,
-      role: 'admin'
+      role: 'admin',
     });
 
     console.log(`Admin user created successfully: ${username}`);
@@ -118,14 +113,14 @@ export class DatabaseSeeder {
         username: 'junior1',
         email: 'junior1@minecraft-kids.de',
         password: 'test123',
-        role: 'junior-admin' as const
+        role: 'junior-admin' as const,
       },
       {
         username: 'junior2',
         email: 'junior2@minecraft-kids.de',
         password: 'test123',
-        role: 'junior-admin' as const
-      }
+        role: 'junior-admin' as const,
+      },
     ];
 
     for (const userData of testUsers) {
@@ -135,7 +130,7 @@ export class DatabaseSeeder {
           username: userData.username,
           email: userData.email,
           password_hash: passwordHash,
-          role: userData.role
+          role: userData.role,
         });
         console.log(`Created test user: ${userData.username}`);
       }
@@ -164,7 +159,7 @@ export class DatabaseSeeder {
         rcon_port: 25575,
         rcon_password: 'minecraft',
         max_players: 20,
-        memory_allocation: '4G'
+        memory_allocation: '4G',
       },
       {
         name: 'creative',
@@ -174,8 +169,8 @@ export class DatabaseSeeder {
         rcon_port: 25576,
         rcon_password: 'minecraft',
         max_players: 10,
-        memory_allocation: '2G'
-      }
+        memory_allocation: '2G',
+      },
     ];
 
     for (const instance of testInstances) {
@@ -221,8 +216,8 @@ export class DatabaseSeeder {
       max_players: 20,
       mods_config: JSON.stringify([
         { name: 'fabric-api', version: '0.100.0' },
-        { name: 'simple-voice-chat', version: '2.5.20' }
-      ])
+        { name: 'simple-voice-chat', version: '2.5.20' },
+      ]),
     };
 
     if (!templateExists(testTemplate.name)) {
@@ -258,7 +253,7 @@ export class DatabaseSeeder {
       name: 'Kids Group',
       description: 'Default group for all kids',
       group_type: 'whitelist' as const,
-      player_list: JSON.stringify(['player1', 'player2', 'player3'])
+      player_list: JSON.stringify(['player1', 'player2', 'player3']),
     };
 
     if (!groupExists(testGroup.name)) {
@@ -311,7 +306,7 @@ export class DatabaseSeeder {
       'SharedUserGroups',
       'SettingTemplates',
       'Instances',
-      'Users'
+      'Users',
     ];
 
     const clearTransaction = this.db.transaction(() => {
@@ -337,7 +332,10 @@ export async function seedDatabase(db: Database.Database, options?: SeedOptions)
 /**
  * Convenience function to seed admin user only
  */
-export async function seedAdminUser(db: Database.Database, options?: SeedOptions): Promise<User | null> {
+export async function seedAdminUser(
+  db: Database.Database,
+  options?: SeedOptions
+): Promise<User | null> {
   const seeder = new DatabaseSeeder(db);
   return seeder.seedAdminUser(options);
 }

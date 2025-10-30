@@ -230,3 +230,4 @@ The project has MCP server configuration in `.mcp.json` with:
 
 When working with version control, the Gitea MCP tools are available for repository operations.
 - ALWAYS use a feature branch for every issue and create a pull request with proper description when the issue is done.
+- ALWAYS keep the issue documentation up-to-date and close issues with their respective PRs.

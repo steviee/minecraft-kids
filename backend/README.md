@@ -60,13 +60,19 @@ src/
 │   ├── test-db.ts    # Test suite
 │   ├── migrations/   # Migration system
 │   └── README.md     # Database documentation
-├── routes/           # API route handlers (TODO)
+├── routes/           # API route handlers
+│   └── auth.routes.ts # Authentication endpoints
+├── services/         # Business logic
+│   └── auth.service.ts # Authentication service (bcrypt, JWT)
+├── types/            # TypeScript type definitions
+│   └── auth.types.ts  # Authentication types
 ├── middleware/       # Express middleware (TODO)
-├── services/         # Business logic (TODO)
 ├── config/           # Configuration (TODO)
 └── utils/            # Utility functions (TODO)
 
 tests/                # Test files
+├── index.test.ts     # Basic API tests
+└── auth.test.ts      # Authentication tests (31 tests)
 data/                 # SQLite database files (gitignored)
 ```
 
@@ -107,5 +113,130 @@ For detailed database documentation, see [src/database/README.md](./src/database
 
 ### Public
 - `GET /api` - API information
+
+### Authentication (`/api/auth`)
+
+All authentication endpoints for user registration, login, and token management.
+
+#### Register User
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "username": "john_doe",
+  "email": "john@example.com",
+  "password": "SecurePass123",
+  "role": "junior-admin"
+}
+```
+
+**Response** (201 Created):
+```json
+{
+  "message": "User registered successfully",
+  "user": {
+    "id": 2,
+    "username": "john_doe",
+    "email": "john@example.com",
+    "role": "junior-admin"
+  }
+}
+```
+
+**Validation Rules:**
+- Username: 3-20 characters, alphanumeric + underscore
+- Email: Valid email format
+- Password: Min 8 characters, 1 uppercase, 1 lowercase, 1 number
+- Role: "admin" or "junior-admin"
+
+#### Login
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "SecurePass123"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "message": "Login successful",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 2,
+    "username": "john_doe",
+    "email": "john@example.com",
+    "role": "junior-admin"
+  }
+}
+```
+
+**Tokens:**
+- Access Token: Expires in 24 hours, used for API authentication
+- Refresh Token: Expires in 7 days, used to get new access tokens
+
+#### Refresh Access Token
+```http
+POST /api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "message": "Access token refreshed successfully"
+}
+```
+
+### Error Responses
+
+All endpoints return consistent error responses:
+
+**400 Bad Request** - Validation error
+```json
+{
+  "error": "Validation failed",
+  "details": ["Password must be at least 8 characters"]
+}
+```
+
+**401 Unauthorized** - Authentication failed
+```json
+{
+  "error": "Invalid email or password"
+}
+```
+
+**409 Conflict** - Duplicate resource
+```json
+{
+  "error": "Email already exists"
+}
+```
+
+**500 Internal Server Error** - Server error
+```json
+{
+  "error": "Internal server error"
+}
+```
+
+## Security
+
+- **Password Hashing**: bcrypt with 12 salt rounds
+- **JWT Authentication**: Separate access and refresh tokens
+- **Token Expiration**: 24h for access, 7d for refresh
+- **Environment Variables**: Secrets stored in .env (not in repo)
+- **Validation**: Strict input validation for all auth endpoints
 
 (More endpoints to be added as development progresses)
