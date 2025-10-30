@@ -622,9 +622,9 @@ export class InstanceService {
    */
   getInstanceRconPassword(id: number): string | null {
     try {
-      const result = this.db
-        .prepare('SELECT rcon_password FROM Instances WHERE id = ?')
-        .get(id) as { rcon_password: string } | undefined;
+      const result = this.db.prepare('SELECT rcon_password FROM Instances WHERE id = ?').get(id) as
+        | { rcon_password: string }
+        | undefined;
 
       return result?.rcon_password || null;
     } catch (error) {
