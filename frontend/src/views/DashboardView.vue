@@ -117,8 +117,7 @@ function cancelDelete(): void {
 }
 
 function handleViewLogs(id: number): void {
-  console.log('View logs for instance:', id);
-  alert('Konsolen-Feature wird in Phase 2 (Issue #11) implementiert');
+  router.push({ name: 'console', params: { id: id.toString() } });
 }
 </script>
 

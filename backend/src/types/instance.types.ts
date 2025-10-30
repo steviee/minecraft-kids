@@ -3,7 +3,7 @@
  * Minecraft Kids Server Management Suite
  */
 
-import { InstanceStatus } from './docker.types.js';
+import { InstanceStatus } from './docker.types';
 
 /**
  * Instance record from database

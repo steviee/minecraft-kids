@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import type Database from 'better-sqlite3';
-import { getDatabase } from '../database/db.js';
-import { AuthenticatedRequest } from '../types/middleware.types.js';
+import { getDatabase } from '../database/db';
+import { AuthenticatedRequest } from '../types/middleware.types';
 
 // Allow overriding database for testing
 let testDatabase: Database.Database | null = null;

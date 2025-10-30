@@ -5,16 +5,16 @@
  */
 
 import type Database from 'better-sqlite3';
-import { getDatabase } from '../database/db.js';
-import { dockerService } from './docker.service.js';
+import { getDatabase } from '../database/db';
+import { dockerService } from './docker.service';
 import {
   InstanceRecord,
   InstanceData,
   CreateInstanceRequest,
   UpdateInstanceRequest,
   instanceRecordToData,
-} from '../types/instance.types.js';
-import { DockerServiceError, ContainerOperationResult } from '../types/docker.types.js';
+} from '../types/instance.types';
+import { DockerServiceError, ContainerOperationResult } from '../types/docker.types';
 
 /**
  * Custom error class for Instance operations
@@ -615,6 +615,26 @@ export class InstanceService {
       .get(userId, instanceId);
 
     return permission !== undefined;
+  }
+
+  /**
+   * Get instance RCON password (for internal use only)
+   */
+  getInstanceRconPassword(id: number): string | null {
+    try {
+      const result = this.db.prepare('SELECT rcon_password FROM Instances WHERE id = ?').get(id) as
+        | { rcon_password: string }
+        | undefined;
+
+      return result?.rcon_password || null;
+    } catch (error) {
+      throw new InstanceServiceError(
+        `Failed to fetch RCON password: ${(error as Error).message}`,
+        'FETCH_FAILED',
+        500,
+        error
+      );
+    }
   }
 }
 
