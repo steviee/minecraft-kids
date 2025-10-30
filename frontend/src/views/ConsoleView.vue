@@ -49,7 +49,7 @@ async function fetchInstance(): Promise<void> {
   try {
     const response = await fetch(`http://localhost:3000/api/instances/${instanceId.value}`, {
       headers: {
-        Authorization: `Bearer ${authStore.token}`,
+        Authorization: `Bearer ${authStore.accessToken}`,
       },
     });
 
@@ -76,7 +76,7 @@ async function fetchInstance(): Promise<void> {
  * Connect to WebSocket server
  */
 function connectWebSocket(): void {
-  if (!authStore.token) {
+  if (!authStore.accessToken) {
     wsError.value = 'Nicht authentifiziert';
     return;
   }
@@ -91,7 +91,7 @@ function connectWebSocket(): void {
     // Authenticate
     const authMessage: WSRequest = {
       type: 'auth',
-      token: authStore.token!,
+      token: authStore.accessToken!,
     };
     ws.value?.send(JSON.stringify(authMessage));
   };
@@ -298,14 +298,14 @@ function handleKeyDown(event: KeyboardEvent): void {
       historyIndex.value--;
     }
 
-    command.value = commandHistory.value[historyIndex.value];
+    command.value = commandHistory.value[historyIndex.value] || '';
   } else if (event.key === 'ArrowDown') {
     event.preventDefault();
     if (historyIndex.value === -1) return;
 
     if (historyIndex.value < commandHistory.value.length - 1) {
       historyIndex.value++;
-      command.value = commandHistory.value[historyIndex.value];
+      command.value = commandHistory.value[historyIndex.value] || '';
     } else {
       historyIndex.value = -1;
       command.value = '';
