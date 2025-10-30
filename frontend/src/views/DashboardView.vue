@@ -1,18 +1,29 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { useInstancesStore } from '../stores/instances';
+import InstanceCard from '../components/InstanceCard.vue';
+import InstanceCreateForm from '../components/InstanceCreateForm.vue';
+import type { CreateInstanceRequest } from '../types/instance';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const instancesStore = useInstancesStore();
 
-// Mock system stats (will be replaced with real API data in Phase 2)
-const systemStats = ref({
+const showCreateForm = ref(false);
+const deleteConfirmId = ref<number | null>(null);
+const actionLoading = ref<number | null>(null);
+
+const systemStats = computed(() => ({
   cpu: { usage: 45, cores: 8 },
   memory: { used: 12.4, total: 32, unit: 'GB' },
   disk: { used: 245, total: 500, unit: 'GB' },
-  servers: { online: 2, total: 5 },
-});
+  servers: {
+    online: instancesStore.runningCount,
+    total: instancesStore.totalInstances,
+  },
+}));
 
 const cpuPercentage = computed(() => systemStats.value.cpu.usage);
 const memoryPercentage = computed(
@@ -21,50 +32,98 @@ const memoryPercentage = computed(
 const diskPercentage = computed(
   () => (systemStats.value.disk.used / systemStats.value.disk.total) * 100
 );
-const serversPercentage = computed(
-  () => (systemStats.value.servers.online / systemStats.value.servers.total) * 100
-);
+const serversPercentage = computed(() => {
+  const { online, total } = systemStats.value.servers;
+  return total > 0 ? (online / total) * 100 : 0;
+});
 
-// Mock server list (will be replaced with real API data in Phase 2)
-const servers = ref([
-  {
-    id: 1,
-    name: 'Survival',
-    status: 'online',
-    players: 3,
-    maxPlayers: 20,
-    version: '1.20.4',
-  },
-  {
-    id: 2,
-    name: 'Creative',
-    status: 'online',
-    players: 1,
-    maxPlayers: 10,
-    version: '1.20.4',
-  },
-  {
-    id: 3,
-    name: 'Minigames',
-    status: 'offline',
-    players: 0,
-    maxPlayers: 30,
-    version: '1.20.4',
-  },
-]);
+onMounted(async () => {
+  await instancesStore.fetchInstances();
+});
 
 function navigateToUsers(): void {
   router.push('/admin/users');
 }
 
-function getStatusClass(status: string): string {
-  return status === 'online' ? 'status-online' : 'status-offline';
+async function handleCreateInstance(data: CreateInstanceRequest): Promise<void> {
+  try {
+    await instancesStore.createInstance(data);
+    showCreateForm.value = false;
+  } catch (error) {
+    console.error('Failed to create instance:', error);
+    alert('Fehler beim Erstellen der Instanz: ' + (error as Error).message);
+  }
+}
+
+async function handleStartInstance(id: number): Promise<void> {
+  actionLoading.value = id;
+  try {
+    await instancesStore.startInstance(id);
+  } catch (error) {
+    console.error('Failed to start instance:', error);
+    alert('Fehler beim Starten der Instanz: ' + (error as Error).message);
+  } finally {
+    actionLoading.value = null;
+  }
+}
+
+async function handleStopInstance(id: number): Promise<void> {
+  actionLoading.value = id;
+  try {
+    await instancesStore.stopInstance(id);
+  } catch (error) {
+    console.error('Failed to stop instance:', error);
+    alert('Fehler beim Stoppen der Instanz: ' + (error as Error).message);
+  } finally {
+    actionLoading.value = null;
+  }
+}
+
+async function handleRestartInstance(id: number): Promise<void> {
+  actionLoading.value = id;
+  try {
+    await instancesStore.restartInstance(id);
+  } catch (error) {
+    console.error('Failed to restart instance:', error);
+    alert('Fehler beim Neustarten der Instanz: ' + (error as Error).message);
+  } finally {
+    actionLoading.value = null;
+  }
+}
+
+function handleDeleteInstance(id: number): void {
+  deleteConfirmId.value = id;
+}
+
+async function confirmDelete(): Promise<void> {
+  if (deleteConfirmId.value === null) return;
+
+  const id = deleteConfirmId.value;
+  actionLoading.value = id;
+
+  try {
+    await instancesStore.deleteInstance(id);
+    deleteConfirmId.value = null;
+  } catch (error) {
+    console.error('Failed to delete instance:', error);
+    alert('Fehler beim Löschen der Instanz: ' + (error as Error).message);
+  } finally {
+    actionLoading.value = null;
+  }
+}
+
+function cancelDelete(): void {
+  deleteConfirmId.value = null;
+}
+
+function handleViewLogs(id: number): void {
+  console.log('View logs for instance:', id);
+  alert('Konsolen-Feature wird in Phase 2 (Issue #11) implementiert');
 }
 </script>
 
 <template>
   <div class="dashboard-container">
-    <!-- System Statistics Cards -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-header">
@@ -129,7 +188,6 @@ function getStatusClass(status: string): string {
       </div>
     </div>
 
-    <!-- Quick Actions (Admin only) -->
     <div v-if="authStore.isAdmin" class="quick-actions">
       <h2 class="section-title">Schnellzugriff</h2>
       <div class="actions-grid">
@@ -137,7 +195,7 @@ function getStatusClass(status: string): string {
           <span class="action-icon">👥</span>
           <span class="action-label">Benutzerverwaltung</span>
         </button>
-        <button class="action-btn" disabled>
+        <button @click="showCreateForm = true" class="action-btn">
           <span class="action-icon">➕</span>
           <span class="action-label">Neuer Server</span>
         </button>
@@ -152,53 +210,71 @@ function getStatusClass(status: string): string {
       </div>
     </div>
 
-    <!-- Server List -->
     <div class="servers-section">
       <div class="section-header">
         <h2 class="section-title">
           {{ authStore.isAdmin ? 'Alle Server' : 'Ihre zugewiesenen Server' }}
         </h2>
-        <button v-if="authStore.isAdmin" class="btn-primary" disabled>
+        <button v-if="authStore.isAdmin" class="btn-primary" @click="showCreateForm = true">
           Neuen Server erstellen
         </button>
       </div>
 
-      <div v-if="servers.length > 0" class="servers-grid">
-        <div v-for="server in servers" :key="server.id" class="server-card">
-          <div class="server-header">
-            <h3 class="server-name">{{ server.name }}</h3>
-            <span class="server-status" :class="getStatusClass(server.status)">
-              {{ server.status === 'online' ? 'Online' : 'Offline' }}
-            </span>
-          </div>
-          <div class="server-info">
-            <div class="info-row">
-              <span class="info-label">Spieler:</span>
-              <span class="info-value">{{ server.players }} / {{ server.maxPlayers }}</span>
-            </div>
-            <div class="info-row">
-              <span class="info-label">Version:</span>
-              <span class="info-value">{{ server.version }}</span>
-            </div>
-          </div>
-          <div class="server-actions">
-            <button class="btn-small" :disabled="server.status === 'online'">Start</button>
-            <button class="btn-small" :disabled="server.status === 'offline'">Stop</button>
-            <button class="btn-small" disabled>Konsole</button>
-          </div>
-        </div>
+      <div v-if="instancesStore.loading && instancesStore.instances.length === 0" class="loading">
+        Lade Server...
+      </div>
+
+      <div v-else-if="instancesStore.instances.length > 0" class="servers-grid">
+        <InstanceCard
+          v-for="instance in instancesStore.instances"
+          :key="instance.id"
+          :instance="instance"
+          :loading="actionLoading === instance.id"
+          @start="handleStartInstance"
+          @stop="handleStopInstance"
+          @restart="handleRestartInstance"
+          @delete="handleDeleteInstance"
+          @view-logs="handleViewLogs"
+        />
       </div>
 
       <div v-else class="empty-state">
-        <p>Keine Server verfügbar.</p>
-        <p class="note">Server-Verwaltung wird in Phase 2 implementiert.</p>
+        <p>
+          {{
+            authStore.isAdmin
+              ? 'Noch keine Server vorhanden.'
+              : 'Ihnen wurden noch keine Server zugewiesen.'
+          }}
+        </p>
+        <button v-if="authStore.isAdmin" class="btn-primary" @click="showCreateForm = true">
+          Ersten Server erstellen
+        </button>
+      </div>
+    </div>
+
+    <InstanceCreateForm
+      v-if="showCreateForm"
+      @submit="handleCreateInstance"
+      @cancel="showCreateForm = false"
+    />
+
+    <div v-if="deleteConfirmId !== null" class="modal-overlay" @click.self="cancelDelete">
+      <div class="confirm-dialog">
+        <h3>Server löschen?</h3>
+        <p>
+          Möchten Sie diesen Server wirklich löschen? Diese Aktion kann nicht rückgängig gemacht
+          werden.
+        </p>
+        <div class="dialog-actions">
+          <button class="btn btn-secondary" @click="cancelDelete">Abbrechen</button>
+          <button class="btn btn-danger" @click="confirmDelete">Löschen</button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Dashboard Container */
 .dashboard-container {
   display: flex;
   flex-direction: column;
@@ -207,7 +283,6 @@ function getStatusClass(status: string): string {
   container-name: dashboard;
 }
 
-/* System Statistics Grid */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
@@ -289,7 +364,6 @@ function getStatusClass(status: string): string {
   background: linear-gradient(90deg, oklch(65% 0.15 145) 0%, oklch(55% 0.18 160) 100%);
 }
 
-/* Quick Actions Section */
 .quick-actions {
   background: oklch(100% 0 0);
   padding: 1.5rem;
@@ -354,7 +428,6 @@ function getStatusClass(status: string): string {
   text-align: center;
 }
 
-/* Servers Section */
 .servers-section {
   background: oklch(100% 0 0);
   padding: 1.5rem;
@@ -389,145 +462,99 @@ function getStatusClass(status: string): string {
   box-shadow: 0 5px 15px oklch(65% 0.15 264 / 0.35);
 }
 
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Servers Grid */
 .servers-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 1.5rem;
 }
 
-.server-card {
-  background: oklch(98% 0 0);
-  padding: 1.5rem;
-  border-radius: 12px;
-  border: 2px solid oklch(92% 0 0);
-  transition: all 0.2s ease;
-}
-
-.server-card:hover {
-  border-color: oklch(65% 0.15 264);
-  box-shadow: 0 4px 12px oklch(0% 0 0 / 0.1);
-}
-
-.server-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-block-end: 1rem;
-  padding-block-end: 1rem;
-  border-block-end: 1px solid oklch(90% 0 0);
-}
-
-.server-name {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: oklch(25% 0 0);
-}
-
-.server-status {
-  padding: 0.375rem 0.875rem;
-  border-radius: 20px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.status-online {
-  background-color: oklch(85% 0.1 145);
-  color: oklch(35% 0.15 145);
-  border: 2px solid oklch(65% 0.12 145);
-}
-
-.status-offline {
-  background-color: oklch(85% 0.08 25);
-  color: oklch(40% 0.12 25);
-  border: 2px solid oklch(70% 0.1 25);
-}
-
-.server-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-block-end: 1.25rem;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.info-label {
-  font-size: 0.9375rem;
-  color: oklch(50% 0 0);
-  font-weight: 500;
-}
-
-.info-value {
-  font-size: 0.9375rem;
-  color: oklch(25% 0 0);
-  font-weight: 600;
-}
-
-.server-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.btn-small {
-  flex: 1;
-  padding: 0.625rem 1rem;
-  background-color: oklch(95% 0 0);
-  color: oklch(25% 0 0);
-  border: 2px solid oklch(85% 0 0);
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-small:hover:not(:disabled) {
-  background-color: oklch(65% 0.15 264);
-  color: oklch(100% 0 0);
-  border-color: transparent;
-}
-
-.btn-small:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Empty State */
+.loading,
 .empty-state {
   padding: 3rem 1.5rem;
   text-align: center;
 }
 
-.empty-state p {
-  margin: 0 0 0.5rem 0;
+.loading {
   color: oklch(50% 0 0);
   font-size: 1.0625rem;
 }
 
-.empty-state p:last-child {
-  margin-bottom: 0;
+.empty-state p {
+  margin: 0 0 1.5rem 0;
+  color: oklch(50% 0 0);
+  font-size: 1.0625rem;
 }
 
-.note {
-  color: oklch(60% 0 0);
-  font-style: italic;
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: oklch(0% 0 0 / 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.confirm-dialog {
+  background: oklch(100% 0 0);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px oklch(0% 0 0 / 0.3);
+  padding: 2rem;
+  max-inline-size: 400px;
+  inline-size: 100%;
+}
+
+.confirm-dialog h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: oklch(25% 0 0);
+}
+
+.confirm-dialog p {
+  margin: 0 0 1.5rem 0;
+  color: oklch(40% 0 0);
+  line-height: 1.6;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
 }
 
-/* Responsive Design */
+.btn-secondary {
+  background-color: oklch(95% 0 0);
+  color: oklch(30% 0 0);
+  border: 2px solid oklch(85% 0 0);
+}
+
+.btn-secondary:hover {
+  background-color: oklch(90% 0 0);
+}
+
+.btn-danger {
+  background-color: oklch(55% 0.18 10);
+  color: oklch(100% 0 0);
+}
+
+.btn-danger:hover {
+  background-color: oklch(45% 0.2 10);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px oklch(55% 0.18 10 / 0.35);
+}
+
 @media (width < 768px) {
   .dashboard-container {
     gap: 1.5rem;
