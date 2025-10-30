@@ -18,7 +18,11 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\""
   },
-  "keywords": ["minecraft", "server-management", "docker"],
+  "keywords": [
+    "minecraft",
+    "server-management",
+    "docker"
+  ],
   "author": "Minecraft Kids Team",
   "license": "MIT",
   "dependencies": {
@@ -38,11 +42,13 @@
     "@types/express": "^5.0.5",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.9.2",
+    "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
     "@vitest/ui": "^4.0.5",
     "eslint": "^9.38.0",
     "prettier": "^3.6.2",
+    "supertest": "^7.1.4",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.5"
