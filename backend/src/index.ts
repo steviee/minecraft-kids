@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { initializeDatabase } from './database';
 import authRoutes from './routes/auth.routes';
+import instanceRoutes from './routes/instance.routes.js';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.get('/api', (_req: Request, res: Response) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/instances', instanceRoutes);
 
 async function startServer() {
   try {
